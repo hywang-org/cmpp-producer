@@ -3,6 +3,7 @@ package com.i.server.tabooword.core;
 
 import com.i.server.data.mysql.entity.TabooWord;
 import com.i.server.data.mysql.service.dao.SmsDao;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
@@ -48,7 +49,7 @@ public class TabooWordChecker {
     public static void init(SmsDao smsDao) {
         List<TabooWord> tabooWords = smsDao.find("from TabooWord");
         tree = new Tree();
-        if (!tabooWords.isEmpty()) {
+        if (!CollectionUtils.isEmpty(tabooWords)) {
             for (TabooWord tabooWord : tabooWords) {
                 tree.add(tabooWord.getTabooWord());
             }
