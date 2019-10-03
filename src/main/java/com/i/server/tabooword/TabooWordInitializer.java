@@ -23,6 +23,8 @@ public class TabooWordInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... strings) throws Exception {
+        LOGGER.info("taboo word initialization start");
         TabooWordChecker.init(smsDao);
+        LOGGER.info("taboo word initialization end");
     }
 }
