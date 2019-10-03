@@ -224,7 +224,7 @@ public abstract class AbstractSessionLoginManager extends ChannelDuplexHandler {
 		// child.setWriteLimit(200);
 		// child.setReadLimit(200);
 		List<BusinessHandlerInterface> serverhandlers = new ArrayList<BusinessHandlerInterface>();
-		serverhandlers.add(new CMPPMessageReceiveHandlerAsServer(manager.getRabbitmqService(), appId, channelId));
+		serverhandlers.add(new CMPPMessageReceiveHandlerAsServer(manager.getRabbitmqService(),manager.getSmsDao(), appId, channelId));
 		child.setBusinessHandlerSet(serverhandlers);
 
 		// child.setRedisOperationSets(r1);

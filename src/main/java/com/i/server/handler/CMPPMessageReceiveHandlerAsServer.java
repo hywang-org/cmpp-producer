@@ -12,7 +12,10 @@ import org.marre.sms.SmsMessage;
 import com.alibaba.fastjson.JSONObject;
 import com.i.server.consts.Consts;
 import com.i.server.consts.RedisConsts;
+import com.i.server.data.mysql.entity.ProOrder;
+import com.i.server.data.mysql.service.dao.SmsDao;
 import com.i.server.rabbitmq.service.RabbitmqService;
+import com.i.server.util.DateUtil;
 import com.zx.sms.LongSMSMessage;
 import com.zx.sms.codec.cmpp.msg.CmppDeliverRequestMessage;
 import com.zx.sms.codec.cmpp.msg.CmppDeliverResponseMessage;
@@ -35,13 +38,16 @@ public class CMPPMessageReceiveHandlerAsServer extends MessageReceiveHandler {
 	private final EndpointManager manager = EndpointManager.INS;
 
 	private RabbitmqService rabbitmqService;
+	
+	private SmsDao smsDao;
 
 	String appId;
 
 	String channelId;
 
-	public CMPPMessageReceiveHandlerAsServer(RabbitmqService rabbitmqService, String appId, String channelId) {
+	public CMPPMessageReceiveHandlerAsServer(RabbitmqService rabbitmqService,SmsDao smsDao, String appId, String channelId) {
 		this.rabbitmqService = rabbitmqService;
+		this.smsDao = smsDao;
 		this.appId = appId;
 		this.channelId = channelId;
 	}
@@ -114,7 +120,16 @@ public class CMPPMessageReceiveHandlerAsServer extends MessageReceiveHandler {
 
 						rabbitmqService.publishMq(appId, channelId, ownSequenceId, Consts.CMPP_SUBMIT_REQUEST_MESSAGE,
 								e);
-
+						ProOrder pro = new ProOrder();
+						pro.setAppId(appId);
+						pro.setClientSeqId(clientSequenceId+"");
+						pro.setDesId(e.getDestterminalId()[0]);
+						pro.setChannelId(channelId);
+						pro.setMySeqId(ownSequenceId+"");
+						pro.setOwnMsgId(ownMsgId);
+						pro.setProtocol("cmpp");
+						pro.setShareDate(DateUtil.LocalDateToUdate());
+						smsDao.save(pro);
 						// 回复状态报告
 						// if (e.getRegisteredDelivery() == 1) {
 						//
@@ -180,6 +195,16 @@ public class CMPPMessageReceiveHandlerAsServer extends MessageReceiveHandler {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
+				ProOrder pro = new ProOrder();
+				pro.setAppId(appId);
+				pro.setClientSeqId(clientSequenceId+"");
+				pro.setDesId(e.getDestterminalId()[0]);
+				pro.setChannelId(channelId);
+				pro.setMySeqId(ownSequenceId+"");
+				pro.setOwnMsgId(ownMsgId);
+				pro.setProtocol("cmpp");
+				pro.setShareDate(DateUtil.LocalDateToUdate());
+				smsDao.save(pro);
 
 				// 回复状态报告
 				if (e.getRegisteredDelivery() == 1) {
