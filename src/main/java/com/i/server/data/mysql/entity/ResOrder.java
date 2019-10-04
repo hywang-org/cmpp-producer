@@ -1,13 +1,7 @@
 package com.i.server.data.mysql.entity;
 
+import javax.persistence.*;
 import java.util.Date;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
 
 /**
  * @author 作者 :hywang
@@ -22,7 +16,7 @@ public class ResOrder {
 
     private String id;
 
-    private String mySeqId;
+    private String ownSeqId;
 
     private String spMsgId;
     
@@ -45,13 +39,13 @@ public class ResOrder {
         this.id = id == null ? null : id.trim();
     }
 
-    @Column(name = "my_seq_id")
-    public String getMySeqId() {
-        return mySeqId;
+    @Column(name = "own_seq_id")
+    public String getOwnSeqId() {
+        return ownSeqId;
     }
 
-    public void setMySeqId(String mySeqId) {
-        this.mySeqId = mySeqId;
+    public void setOwnSeqId(String ownSeqId) {
+        this.ownSeqId = ownSeqId;
     }
 
     @Column(name = "sp_msg_id")

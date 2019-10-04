@@ -34,8 +34,6 @@ public class EchoServer {
 	private Logger log = LoggerFactory.getLogger(this.getClass());
 	private final EndpointManager manager = EndpointManager.INS;
 
-	int test1;
-
 	@Resource
 	ValidateClientRedis r1;
 

@@ -1,12 +1,11 @@
 package com.zx.sms.connect.manager;
 
-import java.util.List;
-
 import com.zx.sms.BaseMessage;
-
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.util.concurrent.Promise;
+
+import java.util.List;
 
 /**
  * @author Lihuanghe(18852780@qq.com)
@@ -48,6 +47,7 @@ public interface EndpointConnector<T extends EndpointEntity> {
 	 *连接创建成功后，将channel加入连接器，并发送用户事件 
 	 */
 	public boolean addChannel(Channel ch);
+	public boolean addChannel(Channel ch,EndpointEntity entity);
 	public void removeChannel(Channel ch);
 	public Channel[] getallChannel();
 	

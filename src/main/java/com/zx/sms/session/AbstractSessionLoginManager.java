@@ -1,13 +1,5 @@
 package com.zx.sms.session;
 
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.i.server.handler.CMPPMessageReceiveHandlerAsServer;
 import com.zx.sms.codec.cmpp.msg.CmppConnectRequestMessage;
 import com.zx.sms.common.GlobalConstance;
@@ -19,11 +11,17 @@ import com.zx.sms.connect.manager.cmpp.CMPPServerChildEndpointEntity;
 import com.zx.sms.connect.manager.cmpp.CMPPServerEndpointEntity;
 import com.zx.sms.handler.api.BusinessHandlerInterface;
 import com.zx.sms.session.cmpp.SessionState;
-
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.timeout.IdleStateHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 处理客户端或者服务端登陆，密码校验。协议协商 建立连接前，不会启动消息重试和消息可靠性保证
@@ -180,7 +178,7 @@ public abstract class AbstractSessionLoginManager extends ChannelDuplexHandler {
 			}
 
 			// 检查是否超过最大连接数
-			if (conn.addChannel(ctx.channel())) {
+			if (conn.addChannel(ctx.channel(),entity)) {
 				IdleStateHandler idlehandler = (IdleStateHandler) ctx.pipeline()
 						.get(GlobalConstance.IdleCheckerHandlerName);
 				ctx.pipeline().replace(idlehandler, GlobalConstance.IdleCheckerHandlerName,

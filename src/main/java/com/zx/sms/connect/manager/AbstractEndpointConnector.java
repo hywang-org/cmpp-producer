@@ -1,19 +1,6 @@
 package com.zx.sms.connect.manager;
 
-import java.io.Serializable;
-import java.net.InetSocketAddress;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.i.server.data.redis.service.RedisService;
 import com.zx.sms.BaseMessage;
 import com.zx.sms.common.GlobalConstance;
 import com.zx.sms.common.NotSupportedException;
@@ -26,7 +13,6 @@ import com.zx.sms.handler.api.AbstractBusinessHandler;
 import com.zx.sms.handler.api.BusinessHandlerInterface;
 import com.zx.sms.session.AbstractSessionStateManager;
 import com.zx.sms.session.cmpp.SessionState;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufHolder;
 import io.netty.channel.Channel;
@@ -41,6 +27,19 @@ import io.netty.handler.proxy.Socks5ProxyHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.traffic.ChannelTrafficShapingHandler;
 import io.netty.util.concurrent.Promise;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.Serializable;
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author Lihuanghe(18852780@qq.com)
@@ -212,6 +211,53 @@ public abstract class AbstractEndpointConnector implements EndpointConnector<End
 		EndpointEntity endpoint = getEndpointEntity();
 		System.out.println("nowConnCnt = " + nowConnCnt + ", getMaxChannels() = " + endpoint.getMaxChannels());
 		if (endpoint.getMaxChannels() >= nowConnCnt) {
+			// 标识连接已建立
+			ch.attr(GlobalConstance.attributeKey).set(SessionState.Connect);
+
+			getChannels().add(ch);
+			int cnt = incrementConn();
+
+			ConcurrentMap<Serializable, VersionObject> storedMap = null;
+			if (endpoint.isReSendFailMsg()) {
+				// 如果上次发送失败的消息要重发一次，则要创建持久化Map用于存储发送的message
+				storedMap = BDBStoredMapFactoryImpl.INS.buildMap(endpoint.getId(), "Session_" + endpoint.getId());
+			} else {
+				storedMap = new ConcurrentHashMap();
+			}
+
+			logger.info("Channel added To Endpoint {} .totalCnt:{} ,remoteAddress: {}", endpoint, cnt,
+					ch.remoteAddress());
+
+			if (cnt == 1 && endpoint.isReSendFailMsg()) {
+				// 如果是第一个连接。要把上次发送失败的消息取出，再次发送一次
+				ch.pipeline().addAfter(GlobalConstance.codecName, sessionHandler,
+						createSessionManager(endpoint, storedMap, true));
+			} else {
+				ch.pipeline().addAfter(GlobalConstance.codecName, sessionHandler,
+						createSessionManager(endpoint, storedMap, false));
+			}
+
+			// 增加流量整形 ，每个连接每秒发送，接收消息数不超过配置的值
+			ch.pipeline().addAfter(GlobalConstance.codecName, "ChannelTrafficAfter",
+					new MessageChannelTrafficShapingHandler(endpoint.getWriteLimit(), endpoint.getReadLimit(), 250));
+
+			bindHandler(ch.pipeline(), getEndpointEntity());
+			return true;
+		} else {
+			logger.warn("allowed max channel count: {} ,deny to login.{}", endpoint.getMaxChannels(), endpoint);
+
+			return false;
+		}
+
+	}
+
+	public synchronized boolean addChannel(Channel ch,EndpointEntity endpoint) {
+		int nowConnCnt = getConnectionNum();
+		String appId = endpoint.getId();
+		int maxConnNumber = RedisService.getMaxChannelByAppId(appId);
+
+		System.out.println("nowConnCnt = " + nowConnCnt + ", read MaxChannels from redis = " + maxConnNumber);
+		if (maxConnNumber >= nowConnCnt) {
 			// 标识连接已建立
 			ch.attr(GlobalConstance.attributeKey).set(SessionState.Connect);
 
