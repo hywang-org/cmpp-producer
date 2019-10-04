@@ -207,51 +207,8 @@ public abstract class AbstractEndpointConnector implements EndpointConnector<End
 	};
 
 	public synchronized boolean addChannel(Channel ch) {
-		int nowConnCnt = getConnectionNum();
 		EndpointEntity endpoint = getEndpointEntity();
-		System.out.println("nowConnCnt = " + nowConnCnt + ", getMaxChannels() = " + endpoint.getMaxChannels());
-		if (endpoint.getMaxChannels() >= nowConnCnt) {
-			// 标识连接已建立
-			ch.attr(GlobalConstance.attributeKey).set(SessionState.Connect);
 
-			getChannels().add(ch);
-			int cnt = incrementConn();
-
-			ConcurrentMap<Serializable, VersionObject> storedMap = null;
-			if (endpoint.isReSendFailMsg()) {
-				// 如果上次发送失败的消息要重发一次，则要创建持久化Map用于存储发送的message
-				storedMap = BDBStoredMapFactoryImpl.INS.buildMap(endpoint.getId(), "Session_" + endpoint.getId());
-			} else {
-				storedMap = new ConcurrentHashMap();
-			}
-
-			logger.info("Channel added To Endpoint {} .totalCnt:{} ,remoteAddress: {}", endpoint, cnt,
-					ch.remoteAddress());
-
-			if (cnt == 1 && endpoint.isReSendFailMsg()) {
-				// 如果是第一个连接。要把上次发送失败的消息取出，再次发送一次
-				ch.pipeline().addAfter(GlobalConstance.codecName, sessionHandler,
-						createSessionManager(endpoint, storedMap, true));
-			} else {
-				ch.pipeline().addAfter(GlobalConstance.codecName, sessionHandler,
-						createSessionManager(endpoint, storedMap, false));
-			}
-
-			// 增加流量整形 ，每个连接每秒发送，接收消息数不超过配置的值
-			ch.pipeline().addAfter(GlobalConstance.codecName, "ChannelTrafficAfter",
-					new MessageChannelTrafficShapingHandler(endpoint.getWriteLimit(), endpoint.getReadLimit(), 250));
-
-			bindHandler(ch.pipeline(), getEndpointEntity());
-			return true;
-		} else {
-			logger.warn("allowed max channel count: {} ,deny to login.{}", endpoint.getMaxChannels(), endpoint);
-
-			return false;
-		}
-
-	}
-
-	public synchronized boolean addChannel(Channel ch,EndpointEntity endpoint) {
 		int nowConnCnt = getConnectionNum();
 		String appId = endpoint.getId();
 		int maxConnNumber = RedisService.getMaxChannelByAppId(appId);
@@ -297,6 +254,10 @@ public abstract class AbstractEndpointConnector implements EndpointConnector<End
 		}
 
 	}
+
+//	private boolean processChannelLogic(Channel ch,EndpointEntity endpoint) {
+//
+//	}
 
 	public void removeChannel(Channel ch) {
 

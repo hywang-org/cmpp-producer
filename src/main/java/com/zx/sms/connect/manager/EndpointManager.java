@@ -1,23 +1,16 @@
 package com.zx.sms.connect.manager;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.i.server.data.mysql.service.dao.SmsDao;
 import com.i.server.data.redis.RedisOperationSets;
 import com.i.server.rabbitmq.service.RabbitmqService;
-
 import io.netty.channel.Channel;
 import io.netty.util.concurrent.Future;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Lihuanghe(18852780@qq.com) 系统连接的统一管理器，负责连接服务端，或者开启监听端口，等客户端连接 。
@@ -112,18 +105,17 @@ public enum EndpointManager implements EndpointManagerInterface {
 	}
 
 	public void addChannelByAppIdChannelId(String appId, String channelId, Channel channel) {
-		if (appChannelInfomap == null) {
-			System.out.println("is null" + appId + appChannelInfomap.isEmpty());
-		} else {
-			System.out.println("not null" + appId + appChannelInfomap.isEmpty());
-		}
-		// if (appChannelInfomap.isEmpty())
-		Map<String, Channel> channelMap = appChannelInfomap.get(appId);
-		if (channelMap != null) {
-			channelMap.put(channelId, channel);
-		} else {
-			channelMap = new HashMap<String, Channel>();
-			channelMap.put(channelId, channel);
+		logger.info("addChannelByAppIdChannelId, appId = {} and channelId = {}", appId, channelId);
+		if (appChannelInfomap !=null && appId != null){
+			Map<String, Channel> channelMap = appChannelInfomap.get(appId);
+			if (channelMap != null) {
+				channelMap.put(channelId, channel);
+			} else {
+				channelMap = new HashMap<String, Channel>();
+				channelMap.put(channelId, channel);
+			}
+		}else {
+			logger.info("appId or appChannelInfomap is null, appId = {}",appId);
 		}
 	}
 

@@ -1,5 +1,6 @@
 package com.zx.sms.codec.cmpp.wap;
 
+
 import com.i.server.tabooword.core.TabooWordChecker;
 import com.zx.sms.BaseMessage;
 import com.zx.sms.LongSMSMessage;

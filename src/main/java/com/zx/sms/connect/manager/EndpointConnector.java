@@ -47,7 +47,6 @@ public interface EndpointConnector<T extends EndpointEntity> {
 	 *连接创建成功后，将channel加入连接器，并发送用户事件 
 	 */
 	public boolean addChannel(Channel ch);
-	public boolean addChannel(Channel ch,EndpointEntity entity);
 	public void removeChannel(Channel ch);
 	public Channel[] getallChannel();
 	
