@@ -98,7 +98,11 @@ public abstract class AbstractSessionLoginManager extends ChannelDuplexHandler {
 			logger.warn("session is not created. the entity is {}.channel remote is {}", entity,
 					ctx.channel().remoteAddress());
 		}
-		manager.removeChannelByAppIdChannelId(appId, ch.id().asLongText());
+		if(appId != null) {
+			manager.removeChannelByAppIdChannelId(appId, ch.id().asLongText());
+		} else {
+			logger.info("channelInactive but appId is null");
+		}
 		ctx.fireChannelInactive();
 	}
 
@@ -148,11 +152,13 @@ public abstract class AbstractSessionLoginManager extends ChannelDuplexHandler {
 
 		// 认证成功
 		if (status == 0) {
-			createChild((CmppConnectRequestMessage) message, channelId);
 			EndpointEntity childentity = queryEndpointEntityByMsg(message);
 			if (childentity == null) {
-				failedLogin(ctx, message, 3);
+				childentity = createChild((CmppConnectRequestMessage) message, channelId);
+				if (childentity == null){
+					failedLogin(ctx, message, 3);
 				return;
+				}
 			}
 
 			// 修改协议版本，使用客户端对应协议的协议解析器
@@ -200,7 +206,7 @@ public abstract class AbstractSessionLoginManager extends ChannelDuplexHandler {
 		}
 	}
 
-	private void createChild(CmppConnectRequestMessage message, String channelId) {
+	private EndpointEntity createChild(CmppConnectRequestMessage message, String channelId) {
 		appId = message.getSourceAddr();
 		this.channelId = channelId;
 		CMPPServerChildEndpointEntity child = new CMPPServerChildEndpointEntity();
@@ -228,6 +234,8 @@ public abstract class AbstractSessionLoginManager extends ChannelDuplexHandler {
 		// child.setRedisOperationSets(r1);
 		CMPPServerEndpointEntity server = (CMPPServerEndpointEntity) manager.getEndpointEntity("server");
 		server.addchild(child);
+
+		return child;
 	}
 
 	// protected void receiveConnectMessage(ChannelHandlerContext ctx, Object
