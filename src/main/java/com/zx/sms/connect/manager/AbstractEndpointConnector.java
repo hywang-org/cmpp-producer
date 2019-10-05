@@ -242,8 +242,9 @@ public abstract class AbstractEndpointConnector implements EndpointConnector<End
 			}
 
 			// 增加流量整形 ，每个连接每秒发送，接收消息数不超过配置的值
+			long speedLimit = RedisService.getSpeedLimitByAppId(appId);
 			ch.pipeline().addAfter(GlobalConstance.codecName, "ChannelTrafficAfter",
-					new MessageChannelTrafficShapingHandler(endpoint.getWriteLimit(), endpoint.getReadLimit(), 250));
+					new MessageChannelTrafficShapingHandler(speedLimit, speedLimit, 250));
 
 			bindHandler(ch.pipeline(), getEndpointEntity());
 			return true;

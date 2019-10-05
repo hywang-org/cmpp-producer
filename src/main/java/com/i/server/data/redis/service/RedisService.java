@@ -16,13 +16,22 @@ public class RedisService {
     static String connection = loadFileContent("lua/connection.lua");
 
     public static int getMaxChannelByAppId(String appId) {
-        System.out.println("RedisService appId = " + appId);
+        System.out.println("getMaxChannelByAppId RedisService appId = " + appId);
         int maxNumber = Integer
                 .parseInt(String.valueOf(manager.getRedisOperationSetsMap().get(RedisConsts.REDIS_APP_INFO)
                         .getRedisTemplate().opsForHash().get(appId, "max_connection")));
         System.out.println("maxNumber = " + maxNumber);
         return maxNumber;
     }
+
+	public static long getSpeedLimitByAppId(String appId) {
+		System.out.println("getSpeedLimitByAppId RedisService appId = " + appId);
+		long speedLimit = Integer
+				.parseInt(String.valueOf(manager.getRedisOperationSetsMap().get(RedisConsts.REDIS_APP_INFO)
+						.getRedisTemplate().opsForHash().get(appId, "speed_limit")));
+		System.out.println("speedLimit = " + speedLimit);
+		return speedLimit;
+	}
 
     public static boolean conn(String appId) {
         boolean result = manager.getRedisOperationSetsMap().get(RedisConsts.REDIS_APP_INFO).eval(connection, Collections.singletonList(appId));
