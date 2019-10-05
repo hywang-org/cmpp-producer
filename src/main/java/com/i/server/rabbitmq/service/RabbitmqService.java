@@ -1,20 +1,5 @@
 package com.i.server.rabbitmq.service;
 
-import static com.zx.sms.common.util.NettyByteBufUtil.toArray;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.util.Set;
-import java.util.concurrent.TimeoutException;
-
-import org.marre.sms.SmsDcs;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.i.server.consts.Consts;
@@ -34,9 +19,22 @@ import com.zx.sms.common.util.CMPPCommonUtil;
 import com.zx.sms.common.util.DefaultMsgIdUtil;
 import com.zx.sms.common.util.MsgId;
 import com.zx.sms.connect.manager.EndpointManager;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import org.marre.sms.SmsDcs;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.util.Set;
+import java.util.concurrent.TimeoutException;
+
+import static com.zx.sms.common.util.NettyByteBufUtil.toArray;
 
 @Service
 public class RabbitmqService {
@@ -83,32 +81,29 @@ public class RabbitmqService {
 		switch (cmppType) {
 		case Consts.CMPP_SUBMIT_REQUEST_MESSAGE:
 			CmppSubmitRequestMessage cmppObjs = (CmppSubmitRequestMessage) obj;
-			System.out.println("******************************************************start");
-			System.out.println("cmppObjs msg lenth = " + cmppObjs.getMsgLength() + ", cmppObjs content = "
-					+ cmppObjs.getMsgContent());
-			System.out.println("cmppObjs content byte length = " + cmppObjs.getMsgContent().getBytes().length);
-			System.out.println("cmppObjs.getHeader() head length = " + cmppObjs.getHeader().getHeadLength()
-					+ ",selfDefinedMessage.getHeader() body length = " + cmppObjs.getHeader().getBodyLength()
-					+ ", selfDefinedMessage.getBodyBuffer() length = " + cmppObjs.getBodyBuffer().length);
+//			System.out.println("******************************************************start");
+//			System.out.println("cmppObjs msg lenth = " + cmppObjs.getMsgLength() + ", cmppObjs content = "
+//					+ cmppObjs.getMsgContent());
+//			System.out.println("cmppObjs content byte length = " + cmppObjs.getMsgContent().getBytes().length);
+//			System.out.println("cmppObjs.getHeader() head length = " + cmppObjs.getHeader().getHeadLength()
+//					+ ",selfDefinedMessage.getHeader() body length = " + cmppObjs.getHeader().getBodyLength()
+//					+ ", selfDefinedMessage.getBodyBuffer() length = " + cmppObjs.getBodyBuffer().length);
 
 			CmppSubmitRequestSelfDefinedMessage cmppSubmitRequestSelfDefinedMessage = ((CmppSubmitRequestMessage) obj)
 					.getCmppSubmitRequestSelfDefinedMessage();
-			System.out.println("before selfDefinedMessage.getHeader() head length = "
-					+ cmppSubmitRequestSelfDefinedMessage.getHeader().getHeadLength()
-					+ ",selfDefinedMessage.getHeader() body length = "
-					+ cmppSubmitRequestSelfDefinedMessage.getHeader().getBodyLength()
-					+ ", selfDefinedMessage.getBodyBuffer() length = "
-					+ cmppSubmitRequestSelfDefinedMessage.getBodyBuffer().length);
-			// replace to our own sequence id
-			// cmppSubmitRequestSelfDefinedMessage.setHeader(cmppObjs.getHeader());
-			// cmppSubmitRequestSelfDefinedMessage.setBodyBuffer(generateBodyBuffer(cmppObjs));
-
-			System.out.println("after selfDefinedMessage.getHeader() head length = "
-					+ cmppSubmitRequestSelfDefinedMessage.getHeader().getHeadLength()
-					+ ",selfDefinedMessage.getHeader() body length = "
-					+ cmppSubmitRequestSelfDefinedMessage.getHeader().getBodyLength()
-					+ ", selfDefinedMessage.getBodyBuffer() length = "
-					+ cmppSubmitRequestSelfDefinedMessage.getBodyBuffer().length);
+//			System.out.println("before selfDefinedMessage.getHeader() head length = "
+//					+ cmppSubmitRequestSelfDefinedMessage.getHeader().getHeadLength()
+//					+ ",selfDefinedMessage.getHeader() body length = "
+//					+ cmppSubmitRequestSelfDefinedMessage.getHeader().getBodyLength()
+//					+ ", selfDefinedMessage.getBodyBuffer() length = "
+//					+ cmppSubmitRequestSelfDefinedMessage.getBodyBuffer().length);
+//
+//			System.out.println("after selfDefinedMessage.getHeader() head length = "
+//					+ cmppSubmitRequestSelfDefinedMessage.getHeader().getHeadLength()
+//					+ ",selfDefinedMessage.getHeader() body length = "
+//					+ cmppSubmitRequestSelfDefinedMessage.getHeader().getBodyLength()
+//					+ ", selfDefinedMessage.getBodyBuffer() length = "
+//					+ cmppSubmitRequestSelfDefinedMessage.getBodyBuffer().length);
 
 			cmppSubmitRequestSelfDefinedMessage.getHeader().setSequenceId(ownSequenceId);
 
@@ -120,9 +115,9 @@ public class RabbitmqService {
 			// cForm.getBodyBuffer().length);
 			System.out.println("cForm content = " + cForm.getMsgContent());
 
-			byte[] b = generateBodyBuffer(cmppObjs);
-			System.out.println("generateBodyBuffer length = " + b.length);
-			System.out.println("******************************************************end");
+//			byte[] b = generateBodyBuffer(cmppObjs);
+//			System.out.println("generateBodyBuffer length = " + b.length);
+//			System.out.println("******************************************************end");
 
 			mqEntity = new MqEntity();
 			mqEntity.setAppId(appId);
@@ -336,9 +331,9 @@ public class RabbitmqService {
 	/**
 	 * 发布转写任务到消息队列
 	 * 
-	 * @param audioId
-	 * @param originalFile
-	 * @param userId
+	 * @param appId
+	 * @param msgId
+	 * @param obj
 	 */
 	public void publishMq2(String appId, String msgId, Object obj) throws IOException, TimeoutException {
 		// Channel channel = getConnection().createChannel();

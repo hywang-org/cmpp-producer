@@ -1,6 +1,7 @@
 package com.zx.sms.codec.cmpp.wap;
 
 
+import com.i.server.data.redis.service.RedisService;
 import com.i.server.tabooword.core.TabooWordChecker;
 import com.zx.sms.BaseMessage;
 import com.zx.sms.LongSMSMessage;
@@ -54,8 +55,15 @@ public abstract class AbstractLongMessageExtractContentHandler<T extends BaseMes
 					// out.add(hoder.msg);
 					List<LongSMSMessage> longMsgList2 = (List<LongSMSMessage>) LongMessageFrameHolder.INS.msgHashMap
 							.get(key);
-					System.out.println("longMsgList2 size = " + longMsgList2.size());
+					System.out.println("longMsgList size = " + longMsgList.size());
 					if(!TabooWordChecker.containTabooWord(String.valueOf(hoder.smsMessage))) {
+						long msgListSize = longMsgList2.size();
+						System.out.println("longMsgList2 size = " + msgListSize);
+						logger.info("deduct appId = {}, deductNo = {}", entity.getId(),msgListSize);
+						boolean result = RedisService.deduct(entity.getId(), String.valueOf(msgListSize));
+						if(!result) {
+							logger.info("insufficient number of message to deduct by appId = {}", entity.getId());
+						}
 						for (LongSMSMessage s : longMsgList2) {
 							out.add(s);
 						}

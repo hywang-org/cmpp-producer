@@ -213,8 +213,8 @@ public abstract class AbstractEndpointConnector implements EndpointConnector<End
 		String appId = endpoint.getId();
 		int maxConnNumber = RedisService.getMaxChannelByAppId(appId);
 
-		System.out.println("nowConnCnt = " + nowConnCnt + ", read MaxChannels from redis = " + maxConnNumber);
-		if (maxConnNumber >= nowConnCnt) {
+//		System.out.println("nowConnCnt = " + nowConnCnt + ", read MaxChannels from redis = " + maxConnNumber);
+		if (RedisService.conn(appId)) {
 			// 标识连接已建立
 			ch.attr(GlobalConstance.attributeKey).set(SessionState.Connect);
 
@@ -248,7 +248,7 @@ public abstract class AbstractEndpointConnector implements EndpointConnector<End
 			bindHandler(ch.pipeline(), getEndpointEntity());
 			return true;
 		} else {
-			logger.warn("allowed max channel count: {} ,deny to login.{}", endpoint.getMaxChannels(), endpoint);
+			logger.warn("allowed max channel count: {} ,deny to login.{}", maxConnNumber, endpoint);
 
 			return false;
 		}
