@@ -1,17 +1,5 @@
 package com.zx.sms.session.cmpp;
 
-import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.Map;
-
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang3.time.DateFormatUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.google.common.primitives.Bytes;
 import com.google.common.primitives.Ints;
 import com.i.server.consts.RedisConsts;
@@ -28,12 +16,20 @@ import com.zx.sms.connect.manager.cmpp.CMPPCodecChannelInitializer;
 import com.zx.sms.connect.manager.cmpp.CMPPEndpointEntity;
 import com.zx.sms.connect.manager.cmpp.CMPPServerChildEndpointEntity;
 import com.zx.sms.session.AbstractSessionLoginManager;
-
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.Map;
 
 /**
  * 处理客户端或者服务端登陆，密码校验。协议协商 建立连接前，不会启动消息重试和消息可靠性保证
@@ -54,10 +50,9 @@ public class SessionLoginManager extends AbstractSessionLoginManager {
 	private int validClientMsg(CmppConnectRequestMessage message) throws Exception {
 		// return 0;
 		Map<String, RedisOperationSets> redisOperationSetsMap = manager.getRedisOperationSetsMap();
-		String appInfoString = redisOperationSetsMap.get(RedisConsts.REDIS_APP_INFO).get(message.getSourceAddr());
-		JSONObject json = JSON.parseObject(appInfoString);
-		String password = "";
-		if (json == null) {
+		String password = String.valueOf(redisOperationSetsMap.get(RedisConsts.REDIS_APP_INFO).getRedisTemplate()
+				.opsForHash().get(message.getSourceAddr(), "app_secret"));
+		if (password == null) {
 			System.out.println("proSecret message.getSourceAddr() = " + message.getSourceAddr());
 			ProSecret proSecret = manager.getSmsDao().findSingle("from ProSecret where appId = ? ",
 					message.getSourceAddr());

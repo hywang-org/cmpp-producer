@@ -1,34 +1,25 @@
 package com.i.server.handler;
 
+import com.alibaba.fastjson.JSONObject;
+import com.i.server.consts.Consts;
+import com.i.server.consts.RedisConsts;
+import com.i.server.data.mysql.entity.ProOrder;
+import com.i.server.data.mysql.service.dao.SmsDao;
+import com.i.server.rabbitmq.service.RabbitmqService;
+import com.i.server.util.DateUtil;
+import com.zx.sms.codec.cmpp.msg.*;
+import com.zx.sms.common.util.CachedMillisecondClock;
+import com.zx.sms.common.util.DefaultSequenceNumberUtil;
+import com.zx.sms.connect.manager.EndpointManager;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
+import org.apache.commons.lang3.RandomUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
-
-import org.apache.commons.lang3.RandomUtils;
-import org.apache.commons.lang3.time.DateFormatUtils;
-import org.marre.sms.SmsMessage;
-
-import com.alibaba.fastjson.JSONObject;
-import com.i.server.consts.Consts;
-import com.i.server.consts.RedisConsts;
-import com.i.server.rabbitmq.service.RabbitmqService;
-import com.zx.sms.LongSMSMessage;
-import com.zx.sms.codec.cmpp.msg.CmppDeliverRequestMessage;
-import com.zx.sms.codec.cmpp.msg.CmppDeliverResponseMessage;
-import com.zx.sms.codec.cmpp.msg.CmppQueryRequestMessage;
-import com.zx.sms.codec.cmpp.msg.CmppQueryResponseMessage;
-import com.zx.sms.codec.cmpp.msg.CmppReportRequestMessage;
-import com.zx.sms.codec.cmpp.msg.CmppSubmitRequestMessage;
-import com.zx.sms.codec.cmpp.msg.CmppSubmitResponseMessage;
-import com.zx.sms.codec.cmpp.wap.LongMessageFrame;
-import com.zx.sms.codec.cmpp.wap.LongMessageFrameHolder;
-import com.zx.sms.common.util.CachedMillisecondClock;
-import com.zx.sms.common.util.DefaultSequenceNumberUtil;
-import com.zx.sms.connect.manager.EndpointManager;
-
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
 
 public class CMPPMessageReceiveHandlerAsServer extends MessageReceiveHandler {
 
@@ -36,12 +27,15 @@ public class CMPPMessageReceiveHandlerAsServer extends MessageReceiveHandler {
 
 	private RabbitmqService rabbitmqService;
 
+	private SmsDao smsDao;
+
 	String appId;
 
 	String channelId;
 
-	public CMPPMessageReceiveHandlerAsServer(RabbitmqService rabbitmqService, String appId, String channelId) {
+	public CMPPMessageReceiveHandlerAsServer(RabbitmqService rabbitmqService, SmsDao smsDao, String appId, String channelId) {
 		this.rabbitmqService = rabbitmqService;
+		this.smsDao = smsDao;
 		this.appId = appId;
 		this.channelId = channelId;
 	}
@@ -80,132 +74,151 @@ public class CMPPMessageReceiveHandlerAsServer extends MessageReceiveHandler {
 			System.out.println("ly 接收到 CmppSubmitRequestMessage 消息," + ((CmppSubmitRequestMessage) msg).getMsgsrc());
 			System.out.println("ly 接收到 CmppSubmitRequestMessage pk消息," + ((CmppSubmitRequestMessage) msg).getPktotal()
 					+ ", " + ((CmppSubmitRequestMessage) msg).getPknumber());
-			if (((CmppSubmitRequestMessage) msg).getMsgContent().length() > 70) {
-				System.out.println(">70");
-				SmsMessage msgcontent = ((LongSMSMessage) msg).getSmsMessage();
-				List<LongMessageFrame> frameList;
-				try {
-					frameList = LongMessageFrameHolder.INS.splitmsgcontent(msgcontent);
-					LongSMSMessage lmsg = (LongSMSMessage) msg;
-					for (LongMessageFrame frame : frameList) {
-						CmppSubmitRequestMessage e = (CmppSubmitRequestMessage) lmsg.generateMessage(frame);
+//			if (((CmppSubmitRequestMessage) msg).getMsgContent().length() > 70) {
+//				System.out.println(">70");
+//				SmsMessage msgcontent = ((LongSMSMessage) msg).getSmsMessage();
+//				List<LongMessageFrame> frameList;
+//				try {
+//					frameList = LongMessageFrameHolder.INS.splitmsgcontent(msgcontent);
+//					LongSMSMessage lmsg = (LongSMSMessage) msg;
+//					for (LongMessageFrame frame : frameList) {
+//						CmppSubmitRequestMessage e = (CmppSubmitRequestMessage) lmsg.generateMessage(frame);
+//
+//						final List<CmppDeliverRequestMessage> reportlist = new ArrayList<CmppDeliverRequestMessage>();
+//
+//						final CmppSubmitResponseMessage resp = new CmppSubmitResponseMessage(
+//								e.getHeader().getSequenceId());
+//						resp.setResult(result);
+//						System.out.println("resp.getMsgId() = " + resp.getMsgId());
+//
+//						String ownMsgId = resp.getMsgId().toString();
+//						long ownSequenceId = DefaultSequenceNumberUtil.getSequenceNo();
+//						long clientSequenceId = e.getHeader().getSequenceId();
+//						System.out.println("ownSequenceId = " + ownSequenceId + ", ownMsgId = " + ownMsgId
+//								+ ", clientSequenceId = " + clientSequenceId + ", channelId = " + channelId);
+//						JSONObject object = new JSONObject();
+//						object.put("ownMsgId", ownMsgId);
+//						object.put("clientSequenceId", clientSequenceId);
+//						object.put("appId", appId);
+//						object.put("channelId", channelId);
+//						manager.getRedisOperationSetsMap().get(RedisConsts.REDIS_PRODUCER)
+//								.set(String.valueOf(ownSequenceId), object.toJSONString());
+//
+//						future = ctx.channel().writeAndFlush(resp);
+//
+//						rabbitmqService.publishMq(appId, channelId, ownSequenceId, Consts.CMPP_SUBMIT_REQUEST_MESSAGE,
+//								e);
+//						ProOrder pro = new ProOrder();
+//						pro.setAppId(appId);
+//						pro.setClientSeqId(clientSequenceId+"");
+//						pro.setDesId(e.getDestterminalId()[0]);
+//						pro.setChannelId(channelId);
+//						pro.setOwnSeqId(ownSequenceId+"");
+//						pro.setOwnMsgId(ownMsgId);
+//						pro.setProtocol("cmpp");
+//						pro.setShareDate(DateUtil.LocalDateToUdate());
+//						smsDao.save(pro);
+//						// 回复状态报告
+//						// if (e.getRegisteredDelivery() == 1) {
+//						//
+//						// final CmppDeliverRequestMessage deliver = new
+//						// CmppDeliverRequestMessage();
+//						// deliver.setDestId(e.getSrcId());
+//						// deliver.setSrcterminalId(e.getDestterminalId()[0]);
+//						// CmppReportRequestMessage report = new
+//						// CmppReportRequestMessage();
+//						// report.setDestterminalId(deliver.getSrcterminalId());
+//						// report.setMsgId(resp.getMsgId());
+//						// String t =
+//						// DateFormatUtils.format(CachedMillisecondClock.INS.now(),
+//						// "yyMMddHHmm");
+//						// report.setSubmitTime(t);
+//						// report.setDoneTime(t);
+//						// report.setStat("DELIVRD");
+//						// report.setSmscSequence(0);
+//						// deliver.setReportRequestMessage(report);
+//						// reportlist.add(deliver);
+//						//
+//						// ctx.executor().submit(new Runnable() {
+//						// public void run() {
+//						// for (CmppDeliverRequestMessage t : reportlist)
+//						// ctx.channel().writeAndFlush(t);
+//						// }
+//						// });
+//						// }
+//					}
+//				} catch (Exception e2) {
+//					// TODO Auto-generated catch block
+//					e2.printStackTrace();
+//				}
+//
+//			} else {
+//			System.out.println("<70");
+			CmppSubmitRequestMessage e = (CmppSubmitRequestMessage) msg;
 
-						final List<CmppDeliverRequestMessage> reportlist = new ArrayList<CmppDeliverRequestMessage>();
+			final List<CmppDeliverRequestMessage> reportlist = new ArrayList<CmppDeliverRequestMessage>();
 
-						final CmppSubmitResponseMessage resp = new CmppSubmitResponseMessage(
-								e.getHeader().getSequenceId());
-						resp.setResult(result);
-						System.out.println("resp.getMsgId() = " + resp.getMsgId());
+			final CmppSubmitResponseMessage resp = new CmppSubmitResponseMessage(e.getHeader().getSequenceId());
+			resp.setResult(result);
+			System.out.println("resp.getMsgId() = " + resp.getMsgId());
 
-						String ownMsgId = resp.getMsgId().toString();
-						long ownSequenceId = DefaultSequenceNumberUtil.getSequenceNo();
-						long clientSequenceId = e.getHeader().getSequenceId();
-						System.out.println("ownSequenceId = " + ownSequenceId + ", ownMsgId = " + ownMsgId
-								+ ", clientSequenceId = " + clientSequenceId + ", channelId = " + channelId);
-						JSONObject object = new JSONObject();
-						object.put("ownMsgId", ownMsgId);
-						object.put("clientSequenceId", clientSequenceId);
-						object.put("appId", appId);
-						object.put("channelId", channelId);
-						manager.getRedisOperationSetsMap().get(RedisConsts.REDIS_PRODUCER)
-								.set(String.valueOf(ownSequenceId), object.toJSONString());
+			String ownMsgId = resp.getMsgId().toString();
+			long ownSequenceId = DefaultSequenceNumberUtil.getSequenceNo();
+			long clientSequenceId = e.getHeader().getSequenceId();
+			System.out.println("ownSequenceId = " + ownSequenceId + ", ownMsgId = " + ownMsgId
+					+ ", clientSequenceId = " + clientSequenceId + ", channelId = " + channelId);
+			JSONObject object = new JSONObject();
+			object.put("ownMsgId", ownMsgId);
+			object.put("clientSequenceId", clientSequenceId);
+			object.put("appId", appId);
+			object.put("channelId", channelId);
+			manager.getRedisOperationSetsMap().get(RedisConsts.REDIS_PRODUCER).set(String.valueOf(ownSequenceId),
+					object.toJSONString());
 
-						future = ctx.channel().writeAndFlush(resp);
+			future = ctx.channel().writeAndFlush(resp);
 
-						rabbitmqService.publishMq(appId, channelId, ownSequenceId, Consts.CMPP_SUBMIT_REQUEST_MESSAGE,
-								e);
-
-						// 回复状态报告
-						// if (e.getRegisteredDelivery() == 1) {
-						//
-						// final CmppDeliverRequestMessage deliver = new
-						// CmppDeliverRequestMessage();
-						// deliver.setDestId(e.getSrcId());
-						// deliver.setSrcterminalId(e.getDestterminalId()[0]);
-						// CmppReportRequestMessage report = new
-						// CmppReportRequestMessage();
-						// report.setDestterminalId(deliver.getSrcterminalId());
-						// report.setMsgId(resp.getMsgId());
-						// String t =
-						// DateFormatUtils.format(CachedMillisecondClock.INS.now(),
-						// "yyMMddHHmm");
-						// report.setSubmitTime(t);
-						// report.setDoneTime(t);
-						// report.setStat("DELIVRD");
-						// report.setSmscSequence(0);
-						// deliver.setReportRequestMessage(report);
-						// reportlist.add(deliver);
-						//
-						// ctx.executor().submit(new Runnable() {
-						// public void run() {
-						// for (CmppDeliverRequestMessage t : reportlist)
-						// ctx.channel().writeAndFlush(t);
-						// }
-						// });
-						// }
-					}
-				} catch (Exception e2) {
-					// TODO Auto-generated catch block
-					e2.printStackTrace();
-				}
-
-			} else {
-				System.out.println("<70");
-				CmppSubmitRequestMessage e = (CmppSubmitRequestMessage) msg;
-
-				final List<CmppDeliverRequestMessage> reportlist = new ArrayList<CmppDeliverRequestMessage>();
-
-				final CmppSubmitResponseMessage resp = new CmppSubmitResponseMessage(e.getHeader().getSequenceId());
-				resp.setResult(result);
-				System.out.println("resp.getMsgId() = " + resp.getMsgId());
-
-				String ownMsgId = resp.getMsgId().toString();
-				long ownSequenceId = DefaultSequenceNumberUtil.getSequenceNo();
-				long clientSequenceId = e.getHeader().getSequenceId();
-				System.out.println("ownSequenceId = " + ownSequenceId + ", ownMsgId = " + ownMsgId
-						+ ", clientSequenceId = " + clientSequenceId + ", channelId = " + channelId);
-				JSONObject object = new JSONObject();
-				object.put("ownMsgId", ownMsgId);
-				object.put("clientSequenceId", clientSequenceId);
-				object.put("appId", appId);
-				object.put("channelId", channelId);
-				manager.getRedisOperationSetsMap().get(RedisConsts.REDIS_PRODUCER).set(String.valueOf(ownSequenceId),
-						object.toJSONString());
-
-				future = ctx.channel().writeAndFlush(resp);
-
-				try {
-					rabbitmqService.publishMq(appId, channelId, ownSequenceId, Consts.CMPP_SUBMIT_REQUEST_MESSAGE, e);
-				} catch (IOException | TimeoutException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-
-				// 回复状态报告
-				if (e.getRegisteredDelivery() == 1) {
-
-					final CmppDeliverRequestMessage deliver = new CmppDeliverRequestMessage();
-					deliver.setDestId(e.getSrcId());
-					deliver.setSrcterminalId(e.getDestterminalId()[0]);
-					CmppReportRequestMessage report = new CmppReportRequestMessage();
-					report.setDestterminalId(deliver.getSrcterminalId());
-					report.setMsgId(resp.getMsgId());
-					String t = DateFormatUtils.format(CachedMillisecondClock.INS.now(), "yyMMddHHmm");
-					report.setSubmitTime(t);
-					report.setDoneTime(t);
-					report.setStat("DELIVRD");
-					report.setSmscSequence(0);
-					deliver.setReportRequestMessage(report);
-					reportlist.add(deliver);
-
-					ctx.executor().submit(new Runnable() {
-						public void run() {
-							for (CmppDeliverRequestMessage t : reportlist)
-								ctx.channel().writeAndFlush(t);
-						}
-					});
-				}
+			try {
+				rabbitmqService.publishMq(appId, channelId, ownSequenceId, Consts.CMPP_SUBMIT_REQUEST_MESSAGE, e);
+			} catch (IOException | TimeoutException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
 			}
+			ProOrder pro = new ProOrder();
+			pro.setAppId(appId);
+			pro.setClientSeqId(clientSequenceId + "");
+			pro.setDesId(e.getDestterminalId()[0]);
+			pro.setChannelId(channelId);
+			pro.setOwnSeqId(ownSequenceId + "");
+			pro.setOwnMsgId(ownMsgId);
+			pro.setProtocol("cmpp");
+			pro.setShareDate(DateUtil.LocalDateToUdate());
+			smsDao.save(pro);
+
+			// 回复状态报告
+			if (e.getRegisteredDelivery() == 1) {
+
+				final CmppDeliverRequestMessage deliver = new CmppDeliverRequestMessage();
+				deliver.setDestId(e.getSrcId());
+				deliver.setSrcterminalId(e.getDestterminalId()[0]);
+				CmppReportRequestMessage report = new CmppReportRequestMessage();
+				report.setDestterminalId(deliver.getSrcterminalId());
+				report.setMsgId(resp.getMsgId());
+				String t = DateFormatUtils.format(CachedMillisecondClock.INS.now(), "yyMMddHHmm");
+				report.setSubmitTime(t);
+				report.setDoneTime(t);
+				report.setStat("DELIVRD");
+				report.setSmscSequence(0);
+				deliver.setReportRequestMessage(report);
+				reportlist.add(deliver);
+
+				ctx.executor().submit(new Runnable() {
+					public void run() {
+						for (CmppDeliverRequestMessage t : reportlist)
+							ctx.channel().writeAndFlush(t);
+					}
+				});
+			}
+//			}
 
 			// try {
 			// rabbitmqService.publishMq(appId, channelId, ownSequenceId,
@@ -246,9 +259,7 @@ public class CMPPMessageReceiveHandlerAsServer extends MessageReceiveHandler {
 			// }
 			// }
 			return result == 0 ? future : null;
-		} else if (msg instanceof CmppQueryRequestMessage)
-
-		{
+		} else if (msg instanceof CmppQueryRequestMessage) {
 			CmppQueryRequestMessage e = (CmppQueryRequestMessage) msg;
 			CmppQueryResponseMessage res = new CmppQueryResponseMessage(e.getHeader().getSequenceId());
 			return ctx.channel().writeAndFlush(res);

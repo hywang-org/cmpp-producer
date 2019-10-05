@@ -1,20 +1,20 @@
 package com.zx.sms.codec.cmpp.wap;
 
-import java.util.ArrayList;
-import java.util.List;
 
-import org.marre.sms.SmsMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.i.server.tabooword.core.TabooWordChecker;
 import com.zx.sms.BaseMessage;
 import com.zx.sms.LongSMSMessage;
 import com.zx.sms.connect.manager.EndpointEntity;
 import com.zx.sms.connect.manager.EndpointEntity.SupportLongMessage;
-
 import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageCodec;
+import org.marre.sms.SmsMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class AbstractLongMessageExtractContentHandler<T extends BaseMessage>
 		extends MessageToMessageCodec<T, T> {
@@ -55,8 +55,12 @@ public abstract class AbstractLongMessageExtractContentHandler<T extends BaseMes
 					List<LongSMSMessage> longMsgList2 = (List<LongSMSMessage>) LongMessageFrameHolder.INS.msgHashMap
 							.get(key);
 					System.out.println("longMsgList2 size = " + longMsgList2.size());
-					for (LongSMSMessage s : longMsgList2) {
-						out.add(s);
+					if(!TabooWordChecker.containTabooWord(String.valueOf(hoder.smsMessage))) {
+						for (LongSMSMessage s : longMsgList2) {
+							out.add(s);
+						}
+					} else {
+						logger.info("Not able to send, since appId {} sent taboo words",entity.getId());
 					}
 				}
 			} catch (Exception ex) {

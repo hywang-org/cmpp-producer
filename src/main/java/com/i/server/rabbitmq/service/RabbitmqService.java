@@ -162,7 +162,6 @@ public class RabbitmqService {
 					JSON.toJSONBytes(mqEntity, SerializerFeature.WriteClassName));
 			LOGGER.info("普通用户appId={}的数据msgId={}发送到消息队列，消息体为{}", appId, mqEntity.getMsgId(),
 					JSON.toJSONString(mqEntity));
-
 			channel.close();
 		} else {
 			LOGGER.info("Not pulish to mq due to empty MqEntity object");

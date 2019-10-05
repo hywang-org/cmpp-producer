@@ -1,19 +1,6 @@
 package com.zx.sms.connect.manager;
 
-import java.io.Serializable;
-import java.net.InetSocketAddress;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.i.server.data.redis.service.RedisService;
 import com.zx.sms.BaseMessage;
 import com.zx.sms.common.GlobalConstance;
 import com.zx.sms.common.NotSupportedException;
@@ -26,7 +13,6 @@ import com.zx.sms.handler.api.AbstractBusinessHandler;
 import com.zx.sms.handler.api.BusinessHandlerInterface;
 import com.zx.sms.session.AbstractSessionStateManager;
 import com.zx.sms.session.cmpp.SessionState;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufHolder;
 import io.netty.channel.Channel;
@@ -41,6 +27,19 @@ import io.netty.handler.proxy.Socks5ProxyHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.traffic.ChannelTrafficShapingHandler;
 import io.netty.util.concurrent.Promise;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.Serializable;
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author Lihuanghe(18852780@qq.com)
@@ -208,10 +207,14 @@ public abstract class AbstractEndpointConnector implements EndpointConnector<End
 	};
 
 	public synchronized boolean addChannel(Channel ch) {
-		int nowConnCnt = getConnectionNum();
 		EndpointEntity endpoint = getEndpointEntity();
-		System.out.println("nowConnCnt = " + nowConnCnt + ", getMaxChannels() = " + endpoint.getMaxChannels());
-		if (endpoint.getMaxChannels() >= nowConnCnt) {
+
+		int nowConnCnt = getConnectionNum();
+		String appId = endpoint.getId();
+		int maxConnNumber = RedisService.getMaxChannelByAppId(appId);
+
+		System.out.println("nowConnCnt = " + nowConnCnt + ", read MaxChannels from redis = " + maxConnNumber);
+		if (maxConnNumber >= nowConnCnt) {
 			// 标识连接已建立
 			ch.attr(GlobalConstance.attributeKey).set(SessionState.Connect);
 
@@ -251,6 +254,10 @@ public abstract class AbstractEndpointConnector implements EndpointConnector<End
 		}
 
 	}
+
+//	private boolean processChannelLogic(Channel ch,EndpointEntity endpoint) {
+//
+//	}
 
 	public void removeChannel(Channel ch) {
 

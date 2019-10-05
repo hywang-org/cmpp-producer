@@ -1,13 +1,5 @@
 package com.zx.sms.session;
 
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.i.server.handler.CMPPMessageReceiveHandlerAsServer;
 import com.zx.sms.codec.cmpp.msg.CmppConnectRequestMessage;
 import com.zx.sms.common.GlobalConstance;
@@ -19,11 +11,17 @@ import com.zx.sms.connect.manager.cmpp.CMPPServerChildEndpointEntity;
 import com.zx.sms.connect.manager.cmpp.CMPPServerEndpointEntity;
 import com.zx.sms.handler.api.BusinessHandlerInterface;
 import com.zx.sms.session.cmpp.SessionState;
-
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.timeout.IdleStateHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 处理客户端或者服务端登陆，密码校验。协议协商 建立连接前，不会启动消息重试和消息可靠性保证
@@ -100,7 +98,11 @@ public abstract class AbstractSessionLoginManager extends ChannelDuplexHandler {
 			logger.warn("session is not created. the entity is {}.channel remote is {}", entity,
 					ctx.channel().remoteAddress());
 		}
-		manager.removeChannelByAppIdChannelId(appId, ch.id().asLongText());
+		if(appId != null) {
+			manager.removeChannelByAppIdChannelId(appId, ch.id().asLongText());
+		} else {
+			logger.info("channelInactive but appId is null");
+		}
 		ctx.fireChannelInactive();
 	}
 
@@ -150,11 +152,13 @@ public abstract class AbstractSessionLoginManager extends ChannelDuplexHandler {
 
 		// 认证成功
 		if (status == 0) {
-			createChild((CmppConnectRequestMessage) message, channelId);
 			EndpointEntity childentity = queryEndpointEntityByMsg(message);
 			if (childentity == null) {
-				failedLogin(ctx, message, 3);
+				childentity = createChild((CmppConnectRequestMessage) message, channelId);
+				if (childentity == null){
+					failedLogin(ctx, message, 3);
 				return;
+				}
 			}
 
 			// 修改协议版本，使用客户端对应协议的协议解析器
@@ -202,7 +206,7 @@ public abstract class AbstractSessionLoginManager extends ChannelDuplexHandler {
 		}
 	}
 
-	private void createChild(CmppConnectRequestMessage message, String channelId) {
+	private EndpointEntity createChild(CmppConnectRequestMessage message, String channelId) {
 		appId = message.getSourceAddr();
 		this.channelId = channelId;
 		CMPPServerChildEndpointEntity child = new CMPPServerChildEndpointEntity();
@@ -224,12 +228,14 @@ public abstract class AbstractSessionLoginManager extends ChannelDuplexHandler {
 		// child.setWriteLimit(200);
 		// child.setReadLimit(200);
 		List<BusinessHandlerInterface> serverhandlers = new ArrayList<BusinessHandlerInterface>();
-		serverhandlers.add(new CMPPMessageReceiveHandlerAsServer(manager.getRabbitmqService(), appId, channelId));
+		serverhandlers.add(new CMPPMessageReceiveHandlerAsServer(manager.getRabbitmqService(),manager.getSmsDao(), appId, channelId));
 		child.setBusinessHandlerSet(serverhandlers);
 
 		// child.setRedisOperationSets(r1);
 		CMPPServerEndpointEntity server = (CMPPServerEndpointEntity) manager.getEndpointEntity("server");
 		server.addchild(child);
+
+		return child;
 	}
 
 	// protected void receiveConnectMessage(ChannelHandlerContext ctx, Object
