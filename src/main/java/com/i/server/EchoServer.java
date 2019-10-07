@@ -85,6 +85,7 @@ public class EchoServer {
 		server.setValid(true);
 		// 使用ssl加密数据流
 		server.setUseSSL(false);
+		server.setSmsDao(smsDao);
 
 		// CMPPServerChildEndpointEntity child = new
 		// CMPPServerChildEndpointEntity();

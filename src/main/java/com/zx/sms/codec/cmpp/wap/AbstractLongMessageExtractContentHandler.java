@@ -1,10 +1,14 @@
 package com.zx.sms.codec.cmpp.wap;
 
 
+import com.i.server.data.mysql.entity.TabooOrder;
 import com.i.server.data.redis.service.RedisService;
 import com.i.server.tabooword.core.TabooWordChecker;
+import com.i.server.util.DateUtil;
+import com.i.server.util.OrderIdGenerator;
 import com.zx.sms.BaseMessage;
 import com.zx.sms.LongSMSMessage;
+import com.zx.sms.codec.cmpp.msg.CmppSubmitRequestMessage;
 import com.zx.sms.connect.manager.EndpointEntity;
 import com.zx.sms.connect.manager.EndpointEntity.SupportLongMessage;
 import io.netty.buffer.ByteBufUtil;
@@ -68,7 +72,27 @@ public abstract class AbstractLongMessageExtractContentHandler<T extends BaseMes
 							out.add(s);
 						}
 					} else {
-						logger.info("Not able to send, since appId {} sent taboo words",entity.getId());
+						String linkId = "";
+						if(longMsgList2.size() > 1) {
+							linkId = OrderIdGenerator.geneOrderIDBySnowFlake("taboo");
+							System.out.println("linkeid = " + linkId);
+						}
+						for (LongSMSMessage s : longMsgList2) {
+							if (msg instanceof CmppSubmitRequestMessage){
+								TabooOrder tabooOrder = new TabooOrder();
+								tabooOrder.setAppId(entity.getId());
+								tabooOrder.setClientSeqId(((CmppSubmitRequestMessage) msg).getHeader().getSequenceId() + "");
+								tabooOrder.setDesId(((CmppSubmitRequestMessage) msg).getDestterminalId()[0]);
+	//							tabooOrder.setChannelId(entity.getc);
+	//							tabooOrder.setOwnSeqId(ownSequenceId + "");
+	//							tabooOrder.setOwnMsgId(ownMsgId);
+								tabooOrder.setLinkId(linkId);
+								tabooOrder.setProtocol("cmpp");
+								tabooOrder.setShareDate(DateUtil.LocalDateToUdate());
+								entity.getSmsDao().save(tabooOrder);
+							}
+							logger.info("Not able to send, since appId {} sent taboo words", entity.getId());
+						}
 					}
 				}
 			} catch (Exception ex) {

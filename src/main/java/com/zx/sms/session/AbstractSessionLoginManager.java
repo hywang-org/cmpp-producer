@@ -1,5 +1,6 @@
 package com.zx.sms.session;
 
+import com.i.server.data.redis.service.RedisService;
 import com.i.server.handler.CMPPMessageReceiveHandlerAsServer;
 import com.zx.sms.codec.cmpp.msg.CmppConnectRequestMessage;
 import com.zx.sms.common.GlobalConstance;
@@ -100,6 +101,8 @@ public abstract class AbstractSessionLoginManager extends ChannelDuplexHandler {
 		}
 		if(appId != null) {
 			manager.removeChannelByAppIdChannelId(appId, ch.id().asLongText());
+			//release connection
+			RedisService.deductConn(appId);
 		} else {
 			logger.info("channelInactive but appId is null");
 		}
@@ -154,7 +157,7 @@ public abstract class AbstractSessionLoginManager extends ChannelDuplexHandler {
 		if (status == 0) {
 			EndpointEntity childentity = queryEndpointEntityByMsg(message);
 			if (childentity == null) {
-				childentity = createChild((CmppConnectRequestMessage) message, channelId);
+				childentity = createChild((CmppConnectRequestMessage) message, channelId, entity);
 				if (childentity == null){
 					failedLogin(ctx, message, 3);
 				return;
@@ -206,7 +209,7 @@ public abstract class AbstractSessionLoginManager extends ChannelDuplexHandler {
 		}
 	}
 
-	private EndpointEntity createChild(CmppConnectRequestMessage message, String channelId) {
+	private EndpointEntity createChild(CmppConnectRequestMessage message, String channelId, EndpointEntity entity) {
 		appId = message.getSourceAddr();
 		this.channelId = channelId;
 		CMPPServerChildEndpointEntity child = new CMPPServerChildEndpointEntity();
@@ -230,6 +233,7 @@ public abstract class AbstractSessionLoginManager extends ChannelDuplexHandler {
 		List<BusinessHandlerInterface> serverhandlers = new ArrayList<BusinessHandlerInterface>();
 		serverhandlers.add(new CMPPMessageReceiveHandlerAsServer(manager.getRabbitmqService(),manager.getSmsDao(), appId, channelId));
 		child.setBusinessHandlerSet(serverhandlers);
+		child.setSmsDao(entity.getSmsDao());
 
 		// child.setRedisOperationSets(r1);
 		CMPPServerEndpointEntity server = (CMPPServerEndpointEntity) manager.getEndpointEntity("server");

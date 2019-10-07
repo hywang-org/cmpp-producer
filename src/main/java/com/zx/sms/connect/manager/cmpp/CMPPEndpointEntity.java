@@ -1,10 +1,11 @@
 package com.zx.sms.connect.manager.cmpp;
 
-import java.nio.charset.Charset;
-
+import com.i.server.data.mysql.service.dao.SmsDao;
 import com.i.server.data.redis.RedisOperationSets;
 import com.zx.sms.common.GlobalConstance;
 import com.zx.sms.connect.manager.EndpointEntity;
+
+import java.nio.charset.Charset;
 
 /**
  * @author Lihuanghe(18852780@qq.com)
@@ -25,6 +26,16 @@ public abstract class CMPPEndpointEntity extends EndpointEntity {
     // 默认为3.0协议
     private short version = (short) 0x30L;
     private Charset chartset = GlobalConstance.defaultTransportCharset;
+
+    private SmsDao smsDao;
+
+    public SmsDao getSmsDao() {
+        return smsDao;
+    }
+
+    public void setSmsDao(SmsDao smsDao) {
+        this.smsDao = smsDao;
+    }
 
     private RedisOperationSets redisOperationSets;
 

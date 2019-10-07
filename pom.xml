@@ -192,8 +192,15 @@
 			<version>4.5.4</version>
 		</dependency>
 		<!-- 引入RabbitMQ结束-->
-		
-		<!-- https://mvnrepository.com/artifact/io.protostuff/protostuff-core -->
+        <!-- 雪花算法 -->
+        <dependency>
+            <groupId>xyz.downgoon</groupId>
+            <artifactId>snowflake</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+
+        <!-- https://mvnrepository.com/artifact/io.protostuff/protostuff-core -->
 <dependency>
     <groupId>io.protostuff</groupId>
     <artifactId>protostuff-core</artifactId>

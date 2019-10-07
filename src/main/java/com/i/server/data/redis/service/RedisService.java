@@ -33,8 +33,13 @@ public class RedisService {
 		return speedLimit;
 	}
 
-    public static boolean conn(String appId) {
-        boolean result = manager.getRedisOperationSetsMap().get(RedisConsts.REDIS_APP_INFO).eval(connection, Collections.singletonList(appId));
+    public static boolean addConn(String appId) {
+        boolean result = manager.getRedisOperationSetsMap().get(RedisConsts.REDIS_APP_INFO).eval(connection, Collections.singletonList(appId), "1");
+        return result;
+    }
+
+    public static boolean deductConn(String appId) {
+        boolean result = manager.getRedisOperationSetsMap().get(RedisConsts.REDIS_APP_INFO).eval(connection, Collections.singletonList(appId), "-1");
         return result;
     }
 

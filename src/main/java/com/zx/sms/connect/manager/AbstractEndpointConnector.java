@@ -214,7 +214,7 @@ public abstract class AbstractEndpointConnector implements EndpointConnector<End
 		int maxConnNumber = RedisService.getMaxChannelByAppId(appId);
 
 //		System.out.println("nowConnCnt = " + nowConnCnt + ", read MaxChannels from redis = " + maxConnNumber);
-		if (RedisService.conn(appId)) {
+		if (RedisService.addConn(appId)) {
 			// 标识连接已建立
 			ch.attr(GlobalConstance.attributeKey).set(SessionState.Connect);
 

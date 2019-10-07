@@ -1,9 +1,10 @@
 package com.zx.sms.connect.manager;
 
+import com.i.server.data.mysql.service.dao.SmsDao;
+import com.zx.sms.handler.api.BusinessHandlerInterface;
+
 import java.io.Serializable;
 import java.util.List;
-
-import com.zx.sms.handler.api.BusinessHandlerInterface;
 
 /**
  * @author Lihuanghe(18852780@qq.com) 代表一个TCP端口。或是客户端，或者是服务端
@@ -39,6 +40,8 @@ public abstract class EndpointEntity implements Serializable {
 	 * 该端口是否支持接收长短信发送
 	 */
 	private SupportLongMessage supportLongmsg = SupportLongMessage.BOTH;
+
+	private SmsDao smsDao;
 
 	/**
 	 * NONE : 接收与发送都不处理长短信 <br/>
@@ -230,6 +233,14 @@ public abstract class EndpointEntity implements Serializable {
 
 	public void setSupportLongmsg(SupportLongMessage supportLongmsg) {
 		this.supportLongmsg = supportLongmsg;
+	}
+
+	public SmsDao getSmsDao() {
+		return smsDao;
+	}
+
+	public void setSmsDao(SmsDao smsDao) {
+		this.smsDao = smsDao;
 	}
 
 	public boolean isCloseWhenRetryFailed() {

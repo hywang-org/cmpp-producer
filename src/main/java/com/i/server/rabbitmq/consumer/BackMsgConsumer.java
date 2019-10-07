@@ -1,27 +1,12 @@
 
 package com.i.server.rabbitmq.consumer;
 
-import static com.zx.sms.common.util.NettyByteBufUtil.toArray;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.UnsupportedEncodingException;
-
-import org.marre.sms.SmsDcs;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.i.server.consts.Consts;
 import com.i.server.rabbitmq.service.MqEntity;
 import com.i.server.rabbitmq.service.RabbitmqService;
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.DefaultConsumer;
-import com.rabbitmq.client.Envelope;
-import com.rabbitmq.client.ShutdownSignalException;
+import com.rabbitmq.client.*;
 import com.zx.sms.codec.cmpp.msg.CmppDeliverRequestMessage;
 import com.zx.sms.codec.cmpp.msg.CmppDeliverRequestSelfDefinedMessage;
 import com.zx.sms.codec.cmpp.msg.CmppReportRequestMessage;
@@ -36,10 +21,19 @@ import com.zx.sms.common.util.DefaultMsgIdUtil;
 import com.zx.sms.common.util.MsgId;
 import com.zx.sms.connect.manager.EndpointConnector;
 import com.zx.sms.connect.manager.EndpointManager;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
+import org.marre.sms.SmsDcs;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.UnsupportedEncodingException;
+
+import static com.zx.sms.common.util.NettyByteBufUtil.toArray;
 
 public class BackMsgConsumer extends DefaultConsumer {
 
@@ -105,7 +99,7 @@ public class BackMsgConsumer extends DefaultConsumer {
 				channel.writeAndFlush(cmppObj);
 			}
 		}
-
+		this.getChannel().basicAck(envelope.getDeliveryTag(), false);
 	}
 
 	private void sendSms(Object obj) {
