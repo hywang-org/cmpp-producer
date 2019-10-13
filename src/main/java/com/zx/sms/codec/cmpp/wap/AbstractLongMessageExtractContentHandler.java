@@ -1,7 +1,6 @@
 package com.zx.sms.codec.cmpp.wap;
 
 
-import com.alibaba.fastjson.JSON;
 import com.i.server.data.mysql.entity.TabooOrder;
 import com.i.server.data.redis.service.RedisService;
 import com.i.server.tabooword.core.TabooWordChecker;
@@ -10,6 +9,7 @@ import com.i.server.util.OrderIdGenerator;
 import com.zx.sms.BaseMessage;
 import com.zx.sms.LongSMSMessage;
 import com.zx.sms.codec.cmpp.msg.CmppSubmitRequestMessage;
+import com.zx.sms.codec.cmpp.msg.CmppSubmitResponseMessage;
 import com.zx.sms.connect.manager.EndpointEntity;
 import com.zx.sms.connect.manager.EndpointEntity.SupportLongMessage;
 import io.netty.buffer.ByteBufUtil;
@@ -34,8 +34,6 @@ public abstract class AbstractLongMessageExtractContentHandler<T extends BaseMes
 
 	@Override
 	protected void decode(ChannelHandlerContext ctx, T msg, List<Object> out) throws Exception {
-		List<String> names = ctx.pipeline().names();
-		System.out.println(JSON.toJSONString(names));
 		if ((entity == null || entity.getSupportLongmsg() == SupportLongMessage.BOTH
 				|| entity.getSupportLongmsg() == SupportLongMessage.RECV) && msg instanceof LongSMSMessage
 				&& needHandleLongMessage(msg)) {
@@ -63,12 +61,12 @@ public abstract class AbstractLongMessageExtractContentHandler<T extends BaseMes
 					List<LongSMSMessage> longMsgList2 = (List<LongSMSMessage>) LongMessageFrameHolder.INS.msgHashMap
 							.get(key);
 					System.out.println("longMsgList size = " + longMsgList.size());
-					if(!TabooWordChecker.containTabooWord(String.valueOf(hoder.smsMessage))) {
+					if (!TabooWordChecker.containTabooWord(String.valueOf(hoder.smsMessage))) {
 						long msgListSize = longMsgList2.size();
 						System.out.println("longMsgList2 size = " + msgListSize);
-						logger.info("deduct appId = {}, deductNo = {}", entity.getId(),msgListSize);
+						logger.info("deduct appId = {}, deductNo = {}", entity.getId(), msgListSize);
 						boolean result = RedisService.deduct(entity.getId(), String.valueOf(msgListSize));
-						if(!result) {
+						if (!result) {
 							logger.info("insufficient number of message to deduct by appId = {}", entity.getId());
 						}
 						for (LongSMSMessage s : longMsgList2) {
@@ -76,19 +74,23 @@ public abstract class AbstractLongMessageExtractContentHandler<T extends BaseMes
 						}
 					} else {
 						String linkId = "";
-						if(longMsgList2.size() > 1) {
+						if (longMsgList2.size() > 1) {
 							linkId = OrderIdGenerator.geneOrderIDBySnowFlake("taboo");
 							System.out.println("linkeid = " + linkId);
 						}
 						for (LongSMSMessage s : longMsgList2) {
-							if (msg instanceof CmppSubmitRequestMessage){
+							if (msg instanceof CmppSubmitRequestMessage) {
+								//依然返回给客户端接收到了消息，返回错误码9（其他错误）
+								final CmppSubmitResponseMessage resp = new CmppSubmitResponseMessage(((CmppSubmitRequestMessage) msg).getHeader().getSequenceId());
+								resp.setResult(9);
+								String ownMsgId = resp.getMsgId().toString();
 								TabooOrder tabooOrder = new TabooOrder();
 								tabooOrder.setAppId(entity.getId());
 								tabooOrder.setClientSeqId(((CmppSubmitRequestMessage) msg).getHeader().getSequenceId() + "");
 								tabooOrder.setDesId(((CmppSubmitRequestMessage) msg).getDestterminalId()[0]);
-	//							tabooOrder.setChannelId(entity.getc);
-	//							tabooOrder.setOwnSeqId(ownSequenceId + "");
-	//							tabooOrder.setOwnMsgId(ownMsgId);
+								//							tabooOrder.setChannelId(entity.getc);
+								//							tabooOrder.setOwnSeqId(ownSequenceId + "");
+								tabooOrder.setOwnMsgId(ownMsgId);
 								tabooOrder.setLinkId(linkId);
 								tabooOrder.setProtocol("cmpp");
 								tabooOrder.setShareDate(DateUtil.LocalDateToUdate());
