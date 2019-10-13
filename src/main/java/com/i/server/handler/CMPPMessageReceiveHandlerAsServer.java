@@ -74,86 +74,6 @@ public class CMPPMessageReceiveHandlerAsServer extends MessageReceiveHandler {
 			System.out.println("ly 接收到 CmppSubmitRequestMessage 消息," + ((CmppSubmitRequestMessage) msg).getMsgsrc());
 			System.out.println("ly 接收到 CmppSubmitRequestMessage pk消息," + ((CmppSubmitRequestMessage) msg).getPktotal()
 					+ ", " + ((CmppSubmitRequestMessage) msg).getPknumber());
-//			if (((CmppSubmitRequestMessage) msg).getMsgContent().length() > 70) {
-//				System.out.println(">70");
-//				SmsMessage msgcontent = ((LongSMSMessage) msg).getSmsMessage();
-//				List<LongMessageFrame> frameList;
-//				try {
-//					frameList = LongMessageFrameHolder.INS.splitmsgcontent(msgcontent);
-//					LongSMSMessage lmsg = (LongSMSMessage) msg;
-//					for (LongMessageFrame frame : frameList) {
-//						CmppSubmitRequestMessage e = (CmppSubmitRequestMessage) lmsg.generateMessage(frame);
-//
-//						final List<CmppDeliverRequestMessage> reportlist = new ArrayList<CmppDeliverRequestMessage>();
-//
-//						final CmppSubmitResponseMessage resp = new CmppSubmitResponseMessage(
-//								e.getHeader().getSequenceId());
-//						resp.setResult(result);
-//						System.out.println("resp.getMsgId() = " + resp.getMsgId());
-//
-//						String ownMsgId = resp.getMsgId().toString();
-//						long ownSequenceId = DefaultSequenceNumberUtil.getSequenceNo();
-//						long clientSequenceId = e.getHeader().getSequenceId();
-//						System.out.println("ownSequenceId = " + ownSequenceId + ", ownMsgId = " + ownMsgId
-//								+ ", clientSequenceId = " + clientSequenceId + ", channelId = " + channelId);
-//						JSONObject object = new JSONObject();
-//						object.put("ownMsgId", ownMsgId);
-//						object.put("clientSequenceId", clientSequenceId);
-//						object.put("appId", appId);
-//						object.put("channelId", channelId);
-//						manager.getRedisOperationSetsMap().get(RedisConsts.REDIS_PRODUCER)
-//								.set(String.valueOf(ownSequenceId), object.toJSONString());
-//
-//						future = ctx.channel().writeAndFlush(resp);
-//
-//						rabbitmqService.publishMq(appId, channelId, ownSequenceId, Consts.CMPP_SUBMIT_REQUEST_MESSAGE,
-//								e);
-//						ProOrder pro = new ProOrder();
-//						pro.setAppId(appId);
-//						pro.setClientSeqId(clientSequenceId+"");
-//						pro.setDesId(e.getDestterminalId()[0]);
-//						pro.setChannelId(channelId);
-//						pro.setOwnSeqId(ownSequenceId+"");
-//						pro.setOwnMsgId(ownMsgId);
-//						pro.setProtocol("cmpp");
-//						pro.setShareDate(DateUtil.LocalDateToUdate());
-//						smsDao.save(pro);
-//						// 回复状态报告
-//						// if (e.getRegisteredDelivery() == 1) {
-//						//
-//						// final CmppDeliverRequestMessage deliver = new
-//						// CmppDeliverRequestMessage();
-//						// deliver.setDestId(e.getSrcId());
-//						// deliver.setSrcterminalId(e.getDestterminalId()[0]);
-//						// CmppReportRequestMessage report = new
-//						// CmppReportRequestMessage();
-//						// report.setDestterminalId(deliver.getSrcterminalId());
-//						// report.setMsgId(resp.getMsgId());
-//						// String t =
-//						// DateFormatUtils.format(CachedMillisecondClock.INS.now(),
-//						// "yyMMddHHmm");
-//						// report.setSubmitTime(t);
-//						// report.setDoneTime(t);
-//						// report.setStat("DELIVRD");
-//						// report.setSmscSequence(0);
-//						// deliver.setReportRequestMessage(report);
-//						// reportlist.add(deliver);
-//						//
-//						// ctx.executor().submit(new Runnable() {
-//						// public void run() {
-//						// for (CmppDeliverRequestMessage t : reportlist)
-//						// ctx.channel().writeAndFlush(t);
-//						// }
-//						// });
-//						// }
-//					}
-//				} catch (Exception e2) {
-//					// TODO Auto-generated catch block
-//					e2.printStackTrace();
-//				}
-//
-//			} else {
-//			System.out.println("<70");
 			CmppSubmitRequestMessage e = (CmppSubmitRequestMessage) msg;
 
 			final List<CmppDeliverRequestMessage> reportlist = new ArrayList<CmppDeliverRequestMessage>();
@@ -172,6 +92,8 @@ public class CMPPMessageReceiveHandlerAsServer extends MessageReceiveHandler {
 			object.put("clientSequenceId", clientSequenceId);
 			object.put("appId", appId);
 			object.put("channelId", channelId);
+			object.put("needDeliver", e.getRegisteredDelivery());
+			object.put("serverId", manager.getServerId());
 			manager.getRedisOperationSetsMap().get(RedisConsts.REDIS_PRODUCER).set(String.valueOf(ownSequenceId),
 					object.toJSONString());
 
@@ -266,5 +188,4 @@ public class CMPPMessageReceiveHandlerAsServer extends MessageReceiveHandler {
 		}
 		return null;
 	}
-
 }

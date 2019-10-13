@@ -1,6 +1,7 @@
 package com.zx.sms.codec.cmpp.wap;
 
 
+import com.alibaba.fastjson.JSON;
 import com.i.server.data.mysql.entity.TabooOrder;
 import com.i.server.data.redis.service.RedisService;
 import com.i.server.tabooword.core.TabooWordChecker;
@@ -33,6 +34,8 @@ public abstract class AbstractLongMessageExtractContentHandler<T extends BaseMes
 
 	@Override
 	protected void decode(ChannelHandlerContext ctx, T msg, List<Object> out) throws Exception {
+		List<String> names = ctx.pipeline().names();
+		System.out.println(JSON.toJSONString(names));
 		if ((entity == null || entity.getSupportLongmsg() == SupportLongMessage.BOTH
 				|| entity.getSupportLongmsg() == SupportLongMessage.RECV) && msg instanceof LongSMSMessage
 				&& needHandleLongMessage(msg)) {

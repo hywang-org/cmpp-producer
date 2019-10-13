@@ -1,6 +1,7 @@
 package com.i.server;
 
 import com.i.server.consts.RedisConsts;
+import com.i.server.data.mysql.entity.App;
 import com.i.server.data.mysql.service.dao.SmsDao;
 import com.i.server.data.redis.*;
 import com.i.server.rabbitmq.service.RabbitmqService;
@@ -78,6 +79,9 @@ public class EchoServer {
 //	}
 
 	public void openServer() {
+		App app = smsDao.findSingle("from App where id = ?", 1l);
+		System.out.println("app = "+app.getAppId());
+
 		CMPPServerEndpointEntity server = new CMPPServerEndpointEntity();
 		server.setId("server");
 		server.setHost("127.0.0.1");
