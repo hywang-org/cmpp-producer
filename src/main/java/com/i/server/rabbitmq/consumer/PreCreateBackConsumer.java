@@ -1,9 +1,10 @@
 package com.i.server.rabbitmq.consumer;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.TimeoutException;
-
+import com.i.server.rabbitmq.consts.RabbitMqConsts;
+import com.i.server.rabbitmq.service.RabbitmqService;
+import com.i.server.util.QueueUtils;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,11 +13,9 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
-import com.i.server.rabbitmq.consts.RabbitMqConsts;
-import com.i.server.rabbitmq.service.RabbitmqService;
-import com.i.server.util.QueueUtils;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Consumer;
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 @Component
 public class PreCreateBackConsumer implements ApplicationListener<ApplicationReadyEvent> {
@@ -44,13 +43,17 @@ public class PreCreateBackConsumer implements ApplicationListener<ApplicationRea
 	@Value("${numberOfConsumer}")
 	private int numberOfConsumer;
 
+	@Value("${serverId}")
+	private String serverId;
+
 	public void createConsumer() throws IOException, TimeoutException {
 
 		// 获取rabbitMq服务器中已存在的队列名
 		List<String> consumerWatiToCreate = queueUtils.getQueueNameList();
 		if (consumerWatiToCreate != null && !consumerWatiToCreate.isEmpty()) {
 			for (String queueName : consumerWatiToCreate) {
-				if (queueName.startsWith(RabbitMqConsts.NETTY_APPID_BACK_QUEUE_NAME_PREFIX)) {
+				//创建队列名前缀是NETTY_BACK_QUEUE_并且后缀是本服务_serverId
+				if (queueName.startsWith(RabbitMqConsts.NETTY_APPID_BACK_QUEUE_NAME_PREFIX) && queueName.endsWith("_" + serverId)) {
 					for (int i = 0; i < numberOfConsumer; i++) {
 						Channel channel = rabbitmqService.getChannel();
 						channel.confirmSelect();
