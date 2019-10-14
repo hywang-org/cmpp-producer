@@ -1,7 +1,13 @@
 package com.i.server.data.mysql.entity;
 
-import javax.persistence.*;
 import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
  * @author 作者 :hywang
@@ -14,9 +20,11 @@ import java.util.Date;
 @Table(name = "tbl_res_order")
 public class ResOrder {
 
-    private String id;
+    private Long id;
 
     private String ownSeqId;
+    
+    private String appId;
 
     private String spMsgId;
     
@@ -25,7 +33,7 @@ public class ResOrder {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
@@ -35,20 +43,29 @@ public class ResOrder {
      * @param id
      *            order_id
      */
-    public void setId(String id) {
-        this.id = id == null ? null : id.trim();
+    public void setId(Long id) {
+        this.id = id;
     }
-
+    
     @Column(name = "own_seq_id")
     public String getOwnSeqId() {
-        return ownSeqId;
-    }
+		return ownSeqId;
+	}
 
-    public void setOwnSeqId(String ownSeqId) {
-        this.ownSeqId = ownSeqId;
-    }
+	public void setOwnSeqId(String ownSeqId) {
+		this.ownSeqId = ownSeqId;
+	}
 
-    @Column(name = "sp_msg_id")
+	@Column(name = "app_id")
+    public String getAppId() {
+		return appId;
+	}
+
+	public void setAppId(String appId) {
+		this.appId = appId;
+	}
+
+	@Column(name = "sp_msg_id")
     public String getSpMsgId() {
         return spMsgId;
     }

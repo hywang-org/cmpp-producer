@@ -11,7 +11,7 @@
  Target Server Version : 50706
  File Encoding         : 65001
 
- Date: 14/10/2019 11:21:33
+ Date: 14/10/2019 13:49:09
 */
 
 SET NAMES utf8mb4;
@@ -82,8 +82,8 @@ CREATE TABLE `tbl_black_list`  (
 DROP TABLE IF EXISTS `tbl_channel`;
 CREATE TABLE `tbl_channel`  (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键自增Id',
-  `sp_id` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '接入号',
-  `sp_name` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '通道名称',
+  `sp_id` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT 'CMPP接口账号',
+  `sp_name` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT 'CMPP接口接入号',
   `sp_type` int(11) NULL DEFAULT 0 COMMENT '通道类型',
   `sp_status` int(11) NULL DEFAULT 0 COMMENT '状态，0:可用 1:不可用',
   `sp_connect_status` int(11) NULL DEFAULT 0 COMMENT '状态，0:可用 1:不可用',
@@ -222,6 +222,7 @@ CREATE TABLE `tbl_recharge_record`  (
 DROP TABLE IF EXISTS `tbl_res_order`;
 CREATE TABLE `tbl_res_order`  (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键自增Id',
+  `app_id` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT 'app_id',
   `own_seq_id` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '服务本身seqId',
   `sp_msg_id` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '运营商msgid',
   `share_date` timestamp(0) NULL DEFAULT NULL COMMENT '分片时间',
