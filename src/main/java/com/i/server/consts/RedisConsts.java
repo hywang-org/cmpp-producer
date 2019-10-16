@@ -7,6 +7,8 @@ public class RedisConsts {
 
 	public static final String REDIS_VALIDATE_CLINET = "RedisValidateClient";
 
+	public static final String REDIS_CHANNEL_INFO = "RedisChannelInfo";
+
 	public static final String REDIS_SPEED_LIMIT = "RedisSpeedLimit";
 
 	public static final String REDIS_PRODUCER = "RedisProducer";

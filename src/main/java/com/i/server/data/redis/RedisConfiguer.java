@@ -54,21 +54,6 @@ public class RedisConfiguer {
 	@Value("${redis.database4}")
 	private int database4;
 
-	// @Bean(name = "redisDaoAccessTime")
-	// public StringRedisTemplate redisTemplateConnectDB2() {
-	// StringRedisTemplate temple = new StringRedisTemplate();
-	// temple.setConnectionFactory(
-	// connectionFactory(hostName, port, password, maxIdle, maxTotal, database0,
-	// maxWaitMillis, false));
-	// RedisSerializer fastJsonRedisSerializer = new
-	// GenericFastJsonRedisSerializer();
-	// RedisSerializer stringRedisSerializer = new StringRedisSerializer();
-	// temple.setDefaultSerializer(fastJsonRedisSerializer);
-	// temple.setKeySerializer(stringRedisSerializer);
-	// temple.setHashKeySerializer(stringRedisSerializer);
-	// return temple;
-	// }
-
 	@Bean(name = "redisAppInfo")
 	public StringRedisTemplate redisTemplateConnectDB3() {
 		StringRedisTemplate temple = new StringRedisTemplate();
@@ -77,16 +62,11 @@ public class RedisConfiguer {
 		return temple;
 	}
 
-	@Bean(name = "redisDaoValidateClient")
-	public RedisTemplate<String, Object> redisTemplateConnectDB2() {
-		RedisTemplate<String, Object> temple = new RedisTemplate<>();
+	@Bean(name = "redisChannelInfo")
+	public StringRedisTemplate redisTemplateConnectDB1() {
+		StringRedisTemplate temple = new StringRedisTemplate();
 		temple.setConnectionFactory(
 				connectionFactory(hostName, port, password, maxIdle, maxTotal, database1, maxWaitMillis, false));
-		RedisSerializer fastJsonRedisSerializer = new GenericFastJsonRedisSerializer();
-		RedisSerializer stringRedisSerializer = new StringRedisSerializer();
-		temple.setDefaultSerializer(fastJsonRedisSerializer);
-		temple.setKeySerializer(stringRedisSerializer);
-		temple.setHashKeySerializer(stringRedisSerializer);
 		return temple;
 	}
 
@@ -106,11 +86,16 @@ public class RedisConfiguer {
 		return temple;
 	}
 
-	@Bean(name = "saveDeletedOrders")
-	public StringRedisTemplate saveDeletedOrders() {
-		StringRedisTemplate temple = new StringRedisTemplate();
+	@Bean(name = "redisDaoValidateClient")
+	public RedisTemplate<String, Object> redisTemplateConnectDB2() {
+		RedisTemplate<String, Object> temple = new RedisTemplate<>();
 		temple.setConnectionFactory(
 				connectionFactory(hostName, port, password, maxIdle, maxTotal, database4, maxWaitMillis, false));
+		RedisSerializer fastJsonRedisSerializer = new GenericFastJsonRedisSerializer();
+		RedisSerializer stringRedisSerializer = new StringRedisSerializer();
+		temple.setDefaultSerializer(fastJsonRedisSerializer);
+		temple.setKeySerializer(stringRedisSerializer);
+		temple.setHashKeySerializer(stringRedisSerializer);
 		return temple;
 	}
 
