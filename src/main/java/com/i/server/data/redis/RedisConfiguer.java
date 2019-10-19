@@ -5,14 +5,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.serializer.RedisSerializer;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.util.StringUtils;
-
-import com.alibaba.fastjson.support.spring.GenericFastJsonRedisSerializer;
-
 import redis.clients.jedis.JedisPoolConfig;
 
 @Configuration
@@ -51,11 +45,8 @@ public class RedisConfiguer {
 	@Value("${redis.database3}")
 	private int database3;
 
-	@Value("${redis.database4}")
-	private int database4;
-
 	@Bean(name = "redisAppInfo")
-	public StringRedisTemplate redisTemplateConnectDB3() {
+	public StringRedisTemplate redisTemplateConnectDB2() {
 		StringRedisTemplate temple = new StringRedisTemplate();
 		temple.setConnectionFactory(
 				connectionFactory(hostName, port, password, maxIdle, maxTotal, database0, maxWaitMillis, false));
@@ -70,32 +61,19 @@ public class RedisConfiguer {
 		return temple;
 	}
 
-	@Bean(name = "redisDaoSpeedLimit")
-	public StringRedisTemplate redisTemplateConnectDB() {
+	@Bean(name = "redisProducer")
+	public StringRedisTemplate redisTemplateConnectDB4() {
 		StringRedisTemplate temple = new StringRedisTemplate();
 		temple.setConnectionFactory(
 				connectionFactory(hostName, port, password, maxIdle, maxTotal, database2, maxWaitMillis, false));
 		return temple;
 	}
 
-	@Bean(name = "redisProducer")
-	public StringRedisTemplate redisTemplateConnectDB4() {
+	@Bean(name = "redisConsumer")
+	public StringRedisTemplate saveDeletedOrders() {
 		StringRedisTemplate temple = new StringRedisTemplate();
 		temple.setConnectionFactory(
 				connectionFactory(hostName, port, password, maxIdle, maxTotal, database3, maxWaitMillis, false));
-		return temple;
-	}
-
-	@Bean(name = "redisDaoValidateClient")
-	public RedisTemplate<String, Object> redisTemplateConnectDB2() {
-		RedisTemplate<String, Object> temple = new RedisTemplate<>();
-		temple.setConnectionFactory(
-				connectionFactory(hostName, port, password, maxIdle, maxTotal, database4, maxWaitMillis, false));
-		RedisSerializer fastJsonRedisSerializer = new GenericFastJsonRedisSerializer();
-		RedisSerializer stringRedisSerializer = new StringRedisSerializer();
-		temple.setDefaultSerializer(fastJsonRedisSerializer);
-		temple.setKeySerializer(stringRedisSerializer);
-		temple.setHashKeySerializer(stringRedisSerializer);
 		return temple;
 	}
 

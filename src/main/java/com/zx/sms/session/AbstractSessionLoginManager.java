@@ -1,7 +1,7 @@
 package com.zx.sms.session;
 
 import com.i.server.data.redis.service.RedisService;
-import com.i.server.handler.CMPPMessageReceiveHandlerAsServer;
+import com.i.server.handler.MessageReceiveHandler;
 import com.zx.sms.codec.cmpp.msg.CmppConnectRequestMessage;
 import com.zx.sms.common.GlobalConstance;
 import com.zx.sms.connect.manager.ClientEndpoint;
@@ -231,7 +231,7 @@ public abstract class AbstractSessionLoginManager extends ChannelDuplexHandler {
 		// child.setWriteLimit(200);
 		// child.setReadLimit(200);
 		List<BusinessHandlerInterface> serverhandlers = new ArrayList<BusinessHandlerInterface>();
-		serverhandlers.add(new CMPPMessageReceiveHandlerAsServer(manager.getRabbitmqService(),manager.getSmsDao(), appId, channelId));
+		serverhandlers.add(new MessageReceiveHandler(manager.getRabbitmqService(),manager.getSmsDao(), appId, channelId));
 		child.setBusinessHandlerSet(serverhandlers);
 		child.setSmsDao(entity.getSmsDao());
 

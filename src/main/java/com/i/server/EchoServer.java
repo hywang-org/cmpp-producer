@@ -24,16 +24,13 @@ public class EchoServer {
 	private final EndpointManager manager = EndpointManager.INS;
 
 	@Resource
-	ValidateClientRedis r1;
+	AppInfoRedis r1;
 
 	@Resource
-	SpeedLimitRedis r2;
+	ChannelInfoRedis r2;
 
 	@Resource
-	AppInfoRedis r3;
-
-	@Resource
-	ProducerRedis r4;
+	ProducerRedis r3;
 
 	@Resource
 	SmsDao smsDao;
@@ -91,39 +88,10 @@ public class EchoServer {
 		server.setUseSSL(false);
 		server.setSmsDao(smsDao);
 
-		// CMPPServerChildEndpointEntity child = new
-		// CMPPServerChildEndpointEntity();
-		// child.setId("109002");
-		// child.setChartset(Charset.forName("utf-8"));
-		// child.setGroupName("test");
-		// // child.setUserName("901783");
-		// // child.setPassword("ICP001");
-		// child.setUserName("109002");
-		// child.setPassword("Aa123456");
-		//
-		// child.setValid(true);
-		// child.setVersion((short) 0x20);
-		//
-		// child.setMaxChannels((short) 2);
-		// child.setRetryWaitTimeSec((short) 30);
-		// child.setMaxRetryCnt((short) 3);
-		// child.setReSendFailMsg(true);
-		// // child.setWriteLimit(200);
-		// // child.setReadLimit(200);
-		// List<BusinessHandlerInterface> serverhandlers = new
-		// ArrayList<BusinessHandlerInterface>();
-		// serverhandlers.add(new
-		// CMPPMessageReceiveHandlerAsServer(rabbitmqService));
-		// child.setBusinessHandlerSet(serverhandlers);
-		//
-		// child.setRedisOperationSets(r1);
-		// server.addchild(child);
-
 		Map<String, RedisOperationSets> redisOperationSetsMap = new HashMap<String, RedisOperationSets>();
-		redisOperationSetsMap.put(RedisConsts.REDIS_VALIDATE_CLINET, r1);
-		redisOperationSetsMap.put(RedisConsts.REDIS_SPEED_LIMIT, r2);
-		redisOperationSetsMap.put(RedisConsts.REDIS_APP_INFO, r3);
-		redisOperationSetsMap.put(RedisConsts.REDIS_PRODUCER, r4);
+		redisOperationSetsMap.put(RedisConsts.REDIS_APP_INFO, r1);
+		redisOperationSetsMap.put(RedisConsts.REDIS_CHANNEL_INFO, r2);
+		redisOperationSetsMap.put(RedisConsts.REDIS_PRODUCER, r3);
 		// ly modify
 		manager.setSmsDao(smsDao);
 

@@ -27,22 +27,3 @@ public class NettyProducer {
 	}
 
 }
-// public class Application implements CommandLineRunner {
-// @Resource
-// ValidateClientRedis r1;
-//
-// public static void main(String[] args) {
-// SpringApplication.run(Application.class, args);
-// }
-//
-// @Override
-// public void run(String... strings) throws Exception {
-// // EchoServer echoServer = new EchoServer(8080);
-// // echoServer.openServer();
-//
-// // echoServer.connect();
-// // Thread.sleep(10000);
-// // echoServer.sendSms("16655169698", "【科技】我是短信内容", "109002");
-// System.out.println("r1.get() = " + r1.get("1"));
-// }
-// }
